@@ -6,15 +6,15 @@
 $settings['container_yamls'][] = __DIR__ . '/services.yml';
 
 /**
- * Include the Pantheon-specific settings file.
+ * Include the Lagoon-specific settings file.
  *
- * n.b. The settings.pantheon.php file makes some changes
+ * n.b. The settings.lagoon.php file makes some changes
  *      that affect all environments that this site
  *      exists in.  Always include this file, even in
  *      a local development environment, to ensure that
  *      the site settings remain consistent.
  */
-include __DIR__ . "/settings.pantheon.php";
+include __DIR__ . "/settings.lagoon.php";
 
 /**
  * Skipping permissions hardening will make scaffolding
@@ -25,10 +25,12 @@ include __DIR__ . "/settings.pantheon.php";
  */
 // $settings['skip_permissions_hardening'] = TRUE;
 
-/**
- * If there is a local settings file, then include it
- */
-$local_settings = __DIR__ . "/settings.local.php";
-if (file_exists($local_settings)) {
-  include $local_settings;
+// Last: this servers specific settings files.
+if (file_exists(__DIR__ . '/settings.local.php')) {
+  include __DIR__ . '/settings.local.php';
+}
+
+// Last: This server specific services file.
+if (file_exists(__DIR__ . '/services.local.yml')) {
+  $settings['container_yamls'][] = __DIR__ . '/services.local.yml';
 }
