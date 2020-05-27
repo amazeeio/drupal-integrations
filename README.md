@@ -38,10 +38,13 @@ This project must be enabled in the top-level composer.json file, or it will be 
 
 ## Tests
 
+Tests will run PHPCS across all files within the `assests` directory.
+
 ```
+composer install
 composer test
 ```
 
-
 ## Credits
 
+Big thanks goes out to [Greg Anderson](https://github.com/greg-1-anderson) from [Pantheon](https://pantheon.io/) all his hard work that went into improving drupal's composer integration allows us to manage platform settings via a composer project.
