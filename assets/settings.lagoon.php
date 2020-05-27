@@ -7,22 +7,21 @@
  * You should not edit this file, please use environment-specific files!
  * They are loaded in this order:
  * - all.settings.php
- *   For settings that should be applied to all environments (dev, prod, staging, docker, etc).
+ *   For settings that should be applied to all environments.
  * - all.services.yml
- *   For services that should be applied to all environments (dev, prod, staging, docker, etc).
+ *   For services that should be applied to all environments.
  * - production.settings.php
  *   For settings only for the production environment.
  * - production.services.yml
  *   For services only for the production environment.
  * - development.settings.php
- *   For settings only for the development environment (development sites, Docker).
+ *   For settings only for all non production environments.
  * - development.services.yml
- *   For services only for the development environment (development sites, Docker).
+ *   For services only for all non production environments.
  * - settings.local.php
- *   For settings only for the local environment, this file will not be committed in Git!
+ *   For settings only for the local environment.
  * - services.local.yml
- *   For services only for the local environment, this file will not be committed in Git!
- *
+ *   For services only for the local environment.
  */
 
 // Lagoon version.
@@ -31,8 +30,8 @@ if (!defined("LAGOON_VERSION")) {
 }
 
 // Lagoon database connection.
-if(getenv('LAGOON')){
-  $databases['default']['default'] = array(
+if (getenv('LAGOON')) {
+  $databases['default']['default'] = [
     'driver' => 'mysql',
     'database' => getenv('MARIADB_DATABASE') ?: 'drupal',
     'username' => getenv('MARIADB_USERNAME') ?: 'drupal',
@@ -40,7 +39,7 @@ if(getenv('LAGOON')){
     'host' => getenv('MARIADB_HOST') ?: 'mariadb',
     'port' => 3306,
     'prefix' => '',
-  );
+  ];
 }
 
 // Lagoon reverse proxy settings.
@@ -48,12 +47,13 @@ if (getenv('LAGOON')) {
   $settings['reverse_proxy'] = TRUE;
 }
 
-// Trusted Host Patterns, see https://www.drupal.org/node/2410395 for more information.
+// Trusted Host Patterns.
+// see https://www.drupal.org/node/2410395 for more information.
 // If your site runs on multiple domains, you need to add these domains here.
+// escape dots, remove schema, use commas as regex separator.
 if (getenv('LAGOON_ROUTES')) {
-  $settings['trusted_host_patterns'] = array(
-    '^' . str_replace(['.', 'https://', 'http://', ','], ['\.', '', '', '|'], getenv('LAGOON_ROUTES')) . '$', // escape dots, remove schema, use commas as regex separator
-   );
+  $patterns = str_replace(['.', 'https://', 'http://', ','], ['\.', '', '', '|'], getenv('LAGOON_ROUTES'));
+  $settings['trusted_host_patterns'] = ['^' . $patterns . '$'];
 }
 
 // Temp directory.
@@ -84,7 +84,7 @@ if (file_exists(__DIR__ . '/all.services.yml')) {
   $settings['container_yamls'][] = __DIR__ . '/all.services.yml';
 }
 
-if(getenv('LAGOON_ENVIRONMENT_TYPE')){
+if (getenv('LAGOON_ENVIRONMENT_TYPE')) {
   // Environment specific settings files.
   if (file_exists(__DIR__ . '/' . getenv('LAGOON_ENVIRONMENT_TYPE') . '.settings.php')) {
     include __DIR__ . '/' . getenv('LAGOON_ENVIRONMENT_TYPE') . '.settings.php';
