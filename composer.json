@@ -6,6 +6,9 @@
     "conflict": {
         "drupal/core": "<8.5"
     },
+    "scripts": {
+        "test": "phpcs"
+    },
     "extra": {
         "drupal-scaffold": {
             "file-mapping": {
@@ -18,5 +21,9 @@
                 }
             }
         }
+    },
+    "require": {
+        "drupal/coder": "^8.3",
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.6.2"
     }
 }
