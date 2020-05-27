@@ -25,4 +25,5 @@ jobs:
             - ./vendor
 
       # run tests
+      - run: composer validate
       - run: ./vendor/bin/phpcs
