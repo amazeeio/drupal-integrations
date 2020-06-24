@@ -29,7 +29,7 @@ This project must be enabled in the top-level composer.json file, or it will be 
     "extra": {
         "drupal-scaffold": {
             "allowed-packages": [
-                "amazeeio/drupal-integrations"
+                "amazeeio/drupal_integrations"
             ]
         }
     }
@@ -38,7 +38,7 @@ This project must be enabled in the top-level composer.json file, or it will be 
 
 ## Tests
 
-Tests will run PHPCS across all files within the `assests` directory.
+Tests will run PHPCS across all files within the `assets` and `src` directories.
 
 ```
 composer install
