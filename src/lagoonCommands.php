@@ -246,7 +246,7 @@ class lagoonCommands extends DrushCommands
         }
 
         foreach ($response->data->project->environments as $env) {
-            $this->io()->writeln('@lagoon.' . $env->name);
+            $this->io()->writeln('@lagoon.' . $env->openshiftProjectName);
         }
 
     }
