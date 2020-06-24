@@ -1,4 +1,4 @@
-# amazeeio/drupal-integrations
+# amazeeio/drupal_integrations
 
 Add this project to any Drupal distribution based on drupal/core-composer-scaffold to enable it for use on Lagoon.
 
@@ -23,7 +23,7 @@ This project must be enabled in the top-level composer.json file, or it will be 
 {
     ...
     "require": {
-        "amazeeio/drupal-integrations"
+        "amazeeio/drupal_integrations"
     },
     ...
     "extra": {

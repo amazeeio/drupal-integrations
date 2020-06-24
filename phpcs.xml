@@ -11,5 +11,6 @@
   <arg value="sp"/>
 
   <file>./assets/</file>
+  <file>./src/</file>
 
 </ruleset>
