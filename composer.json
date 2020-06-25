@@ -30,5 +30,8 @@
     },
     "suggest": {
         "drupal/lagoon_logs": "Zero configuration logging system for Drupal 7 and 8 sites running on amazee.io Lagoon"
+    },
+    "require": {
+        "drupal/core-composer-scaffold": "*"
     }
 }
