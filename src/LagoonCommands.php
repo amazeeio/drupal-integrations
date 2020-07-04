@@ -108,6 +108,17 @@ class LagoonCommands extends DrushCommands {
   }
 
   /**
+   * Generate a JWT token for the lagoon API.
+   *
+   * @command lagoon:jwt
+   *
+   * @aliases jwt
+   */
+  public function generateJwt() {
+    $this->io()->writeln($this->getJwtToken());
+  }
+
+  /**
    * Retrieves the contents of the sites .lagoon.yml file.
    */
   public function getLagoonYml() {
