@@ -2,8 +2,10 @@
 
 namespace Drush\Commands\drupal_integrations;
 
+use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Drush\Commands\DrushCommands;
 use Drush\Drush;
+use Drush\SiteAlias\SiteAliasManagerAwareInterface;
 use GuzzleHttp\Client;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -12,7 +14,9 @@ use Symfony\Component\Yaml\Yaml;
 /**
  * Drush integration for Lagoon.
  */
-class LagoonCommands extends DrushCommands {
+class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInterface {
+
+  use SiteAliasManagerAwareTrait;
 
   /**
    * Lagoon API endpoint.
@@ -95,7 +99,6 @@ class LagoonCommands extends DrushCommands {
     }
 
     $response = $this->getLagoonEnvs();
-
     // Check if the query returned any data for the requested project.
     if (empty($response->data->project->environments)) {
       $this->logger()->warning("API request didn't return any environments for the given project '$this->project_name'.");
@@ -123,6 +126,48 @@ class LagoonCommands extends DrushCommands {
    */
   public function generateJwt() {
     $this->io()->writeln($this->getJwtToken());
+  }
+
+  /**
+   * Run pre-rollout tasks.
+   *
+   * @command lagoon:pre-rollout-tasks
+   */
+  public function preRolloutTasks() {
+    $this->runRolloutTasks('pre');
+  }
+
+  /**
+   * Run post-rollout tasks.
+   *
+   * @command lagoon:post-rollout-tasks
+   */
+  public function postRolloutTasks() {
+    $this->runRolloutTasks('post');
+  }
+
+  /**
+   * Runs rollout tasks on local or remote environments.
+   */
+  public function runRolloutTasks($stage = 'post') {
+    $alias = $this->siteAliasManager()->getSelf();
+
+    // Load tasks from .lagoon.yml.
+    $lagoonyml = $this->getLagoonYml();
+    if (isset($lagoonyml['tasks'][$stage . '-rollout'])) {
+      foreach ($lagoonyml['tasks'][$stage . '-rollout'] as $task) {
+        if ($task['run']['service'] == 'cli') {
+          $process = $this->processManager()->siteProcess($alias, explode(' ', $task['run']['command']));
+          $process->mustRun($process->showRealtime());
+        }
+        else {
+          $this->logger()->warning("Only commands in the 'cli' service can be run via drush.");
+        }
+      }
+    }
+    else {
+      $this->logger()->warning("No $stage rollout tasks found in .lagoon.yml");
+    }
   }
 
   /**
