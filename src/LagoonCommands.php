@@ -103,7 +103,14 @@ class LagoonCommands extends DrushCommands {
     }
 
     foreach ($response->data->project->environments as $env) {
-      $this->io()->writeln('@lagoon.' . $env->openshiftProjectName);
+      $alias = '@lagoon.' . $env->openshiftProjectName;
+
+      // Add production flag.
+      if ($env->name === $response->data->project->productionEnvironment) {
+        $alias .= ' <fg=yellow;bg=black>(production)</>';
+      }
+
+      $this->io()->writeln($alias);
     }
   }
 
