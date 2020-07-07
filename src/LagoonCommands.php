@@ -61,6 +61,13 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   private $sshTimeout;
 
   /**
+   * Path to a specific SSH key to use for lagoon authentication.
+   *
+   * @var int
+   */
+  private $sshKey;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct() {
@@ -78,6 +85,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     $this->endpoint = getenv('LAGOON_OVERRIDE_SSH') ?: $this->endpoint;
     $this->projectName = getenv('LAGOON_PROJECT') ?: $this->projectName;
     $this->sshTimeout = getenv('LAGOON_OVERRIDE_SSH_TIMEOUT') ?: $this->sshTimeout;
+    $this->sshKey = getenv('LAGOON_SSH_KEY');
   }
 
   /**
@@ -195,6 +203,9 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     list ($ssh_host, $ssh_port) = explode(":", $this->endpoint);
 
     $args = "-o ConnectTimeout=5 -o LogLevel=ERROR -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no";
+    if ($this->sshKey) {
+      $args .= " -i $this->sshKey";
+    }
     $cmd = "ssh -p $ssh_port $args lagoon@$ssh_host token 2>&1";
     $this->logger()->debug("Retrieving token via SSH - $cmd");
     $ssh = Process::fromShellCommandline($cmd);
