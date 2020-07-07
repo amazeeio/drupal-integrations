@@ -15,6 +15,8 @@ This project enables the following Lagoon integrations:
 - Prevents the user from updating Drupal core with Drush
 - Configures the trusted host patterns to avoid a warning that is not applicable to Lagoon
 - Ignores large cache directories (e.g. node modules and bower components)
+- Installs lagoon wildcard drush alias file
+- Drush commands for lagoon
 
 ## Enabling this project
 
@@ -34,6 +36,15 @@ This project must be enabled in the top-level composer.json file, or it will be 
         }
     }
 }
+```
+
+## Drush commands for Lagoon
+
+```
+   lagoon:aliases (la)                  Get all remote aliases from lagoon API.
+   lagoon:jwt (jwt)                     Generate a JWT token for the lagoon API.
+   lagoon:post-rollout-tasks            Run post-rollout tasks.
+   lagoon:pre-rollout-tasks             Run pre-rollout tasks.
 ```
 
 ## Tests
