@@ -184,7 +184,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   public function getLagoonYml() {
     $project_root = Drush::bootstrapManager()->getComposerRoot();
     $lagoonyml_path = $project_root . "/.lagoon.yml";
-    return (file_exists($lagoonyml_path)) ? Yaml::parse(file_get_contents($lagoonyml_path)) : FALSE;
+    return (file_exists($lagoonyml_path)) ? Yaml::parse(file_get_contents($lagoonyml_path)) : [];
   }
 
   /**
