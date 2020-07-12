@@ -62,8 +62,9 @@ if (getenv('TMP')) {
 }
 
 // Hash salt.
+// MARIADB_HOST on Lagoon is a randomly generated service name.
 if (getenv('LAGOON')) {
-  $settings['hash_salt'] = hash('sha256', getenv('LAGOON_PROJECT'));
+  $settings['hash_salt'] = hash('sha256', getenv('MARIADB_HOST'));
 }
 
 // The default list of directories that will be ignored by Drupal's file API.
