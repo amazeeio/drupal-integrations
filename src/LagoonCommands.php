@@ -208,19 +208,10 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     }
     $cmd = "ssh -p $ssh_port $args lagoon@$ssh_host token 2>&1";
     $this->logger()->debug("Retrieving token via SSH - $cmd");
-    $ssh = Process::fromShellCommandline($cmd);
+
+    $ssh = new Process($cmd);
     $ssh->setTimeout($this->sshTimeout);
-
-    try {
-      $ssh->mustRun();
-    }
-    catch (ProcessFailedException $exception) {
-      $this->logger()->warning($exception->getMessage());
-    }
-
-    if (!$ssh->isSuccessful()) {
-      throw new ProcessFailedException($ssh);
-    }
+    $ssh->mustRun();
 
     $token = trim($ssh->getOutput());
     $this->logger->debug("JWT Token loaded via ssh: " . $token);
