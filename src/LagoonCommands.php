@@ -108,7 +108,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     $response = $this->getLagoonEnvs();
     // Check if the query returned any data for the requested project.
     if (empty($response->data->project->environments)) {
-      $this->logger()->warning("API request didn't return any environments for the given project '$this->project_name'.");
+      $this->logger()->warning("API request didn't return any environments for the given project '$this->projectName'.");
       return;
     }
 
