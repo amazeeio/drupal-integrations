@@ -1,7 +1,7 @@
 '*':
   host: ssh.lagoon.amazeeio.cloud
   paths:
-    files: files
+    files: sites/default/files
   user: ${env-name}
   ssh:
     options: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p 32222'
