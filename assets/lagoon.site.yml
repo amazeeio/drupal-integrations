@@ -4,5 +4,5 @@
     files: files
   user: ${env-name}
   ssh:
-    options: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p 32222'
+    options: '-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=FATAL -p 32222'
     tty: false
