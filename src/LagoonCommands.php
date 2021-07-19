@@ -92,7 +92,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    *
    * @command lagoon:aliases
    *
-   * @aliases la
+   * @aliases sa
    */
   public function aliases() {
     // Project still not defined, throw a warning.
