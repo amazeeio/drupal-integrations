@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\Core\Installer\InstallerKernel;
+
 // Redis configuration.
 if (getenv('LAGOON')) {
     $redis = new \Redis();
