@@ -100,11 +100,19 @@ if (getenv('LAGOON_ENVIRONMENT_TYPE')) {
   if (file_exists($lagoon_services_include)) {
     try {
       $serviceList = include($lagoon_services_include);
+
+      foreach($serviceList as $service) {
+        $service_file_name = __DIR__ . sprintf('/lagoon_services/%s.php', strtolower(trim($service)));
+        if(file_exists($service_file_name)) {
+          include_once($service_file_name);
+        }
+      }
+
       if(!is_array($serviceList)) {
         throw new \Exception("lagoon_services.php does not return an array. Invalid.");
       }
     } catch(\Exception $ex) {
-        
+        //TODO: display error/log 
     }
     
   }
