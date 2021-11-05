@@ -23,7 +23,7 @@
                 },
                 "[web-root]/sites/default/lagoon_services/redis.php": "assets/lagoon_services/redis.php",
                 "[web-root]/sites/default/redis-unavailable.services.yml": "assets/lagoon_services/redis-unavailable.services.yml",
-                "[web-root]/sites/default/lagoon_services/redis.php": "assets/lagoon_services/solr.php",
+                "[web-root]/sites/default/lagoon_services/solr.php": "assets/lagoon_services/solr.php",
                 "[web-root]/sites/default/lagoon_services.php": {
                     "mode": "replace",
                     "path": "assets/lagoon_services.php",

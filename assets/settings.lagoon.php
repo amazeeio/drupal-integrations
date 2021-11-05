@@ -94,4 +94,19 @@ if (getenv('LAGOON_ENVIRONMENT_TYPE')) {
   if (file_exists(__DIR__ . '/' . getenv('LAGOON_ENVIRONMENT_TYPE') . '.services.yml')) {
     $settings['container_yamls'][] = __DIR__ . '/' . getenv('LAGOON_ENVIRONMENT_TYPE') . '.services.yml';
   }
+
+  // Add Lagoon service files
+  $lagoon_services_include = __DIR__ . '/lagoon_services.php';
+  if (file_exists($lagoon_services_include)) {
+    try {
+      $serviceList = include($lagoon_services_include);
+      if(!is_array($serviceList)) {
+        throw new \Exception("lagoon_services.php does not return an array. Invalid.");
+      }
+    } catch(\Exception $ex) {
+        
+    }
+    
+  }
+
 }
