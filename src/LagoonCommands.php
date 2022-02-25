@@ -65,11 +65,11 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   public function __construct() {
     // Get default config.
     $lagoonyml = $this->getLagoonYml();
-    $this->api = isset($lagoonyml['api']) ? $lagoonyml['api'] : 'https://api.lagoon.amazeeio.cloud/graphql';
-    $this->endpoint = isset($lagoonyml['ssh']) ? $lagoonyml['ssh'] : 'ssh.lagoon.amazeeio.cloud:32222';
+    $this->api = $lagoonyml['api'] ?? 'https://api.lagoon.amazeeio.cloud/graphql';
+    $this->endpoint = $lagoonyml['ssh'] ?? 'ssh.lagoon.amazeeio.cloud:32222';
     $this->jwt_token = getenv('LAGOON_OVERRIDE_JWT_TOKEN');
-    $this->projectName = isset($lagoonyml['project']) ? $lagoonyml['project'] : '';
-    $this->ssh_port_timeout = isset($lagoonyml['ssh_port_timeout']) ? $lagoonyml['ssh_port_timeout'] : 30;
+    $this->projectName = $lagoonyml['project'] ?? '';
+    $this->ssh_port_timeout = $lagoonyml['ssh_port_timeout'] ?? 30;
 
     // Allow environment variable overrides.
     $this->api = getenv('LAGOON_OVERRIDE_API') ?: $this->api;
@@ -182,7 +182,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * Retrives a JWT token from the Lagoon SSH endpoint.
    */
   public function getJwtToken() {
-    list ($ssh_host, $ssh_port) = explode(":", $this->endpoint);
+    [$ssh_host, $ssh_port] = explode(":", $this->endpoint);
 
     $args = "-o ConnectTimeout=5 -o LogLevel=FATAL -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no";
     if ($this->sshKey) {
