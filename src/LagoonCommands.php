@@ -117,10 +117,9 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   }
 
   /**
-   * Alters aliases to support ssh-portal
+   * Alters aliases to support ssh-portal.
    *
    * @hook pre-init *
-   *
    */
   public function alter($input, $annotationData) {
     $self = $this->siteAliasManager()->getSelf();
@@ -134,11 +133,10 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
         $this->logger()->warning(
           "API request didn't return any environments for the given project '$this->projectName'."
         );
-        //there's nothing for us to do, so we ...
+        // there's nothing for us to do, so we ...
         return;
       }
 
-      //grab this environment
       $alias = $self->name();
       $matchEnv = NULL;
       foreach ($response->data->project->environments as $environment) {
@@ -164,8 +162,6 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       }
     }
   }
-
-
 
   /**
    * Generate a JWT token for the lagoon API.
