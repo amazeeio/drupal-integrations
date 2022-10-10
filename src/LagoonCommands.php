@@ -117,6 +117,57 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   }
 
   /**
+   * Alters aliases to support ssh-portal
+   *
+   * @hook pre-init *
+   *
+   */
+  public function alter($input, $annotationData) {
+    $self = $this->siteAliasManager()->getSelf();
+    if ($self->isRemote()) {
+      if (empty($this->jwt_token)) {
+        $this->jwt_token = $this->getJwtToken();
+      }
+      $response = $this->getLagoonEnvs();
+      // Check if the query returned any data for the requested project.
+      if (empty($response->data->project->environments)) {
+        $this->logger()->warning(
+          "API request didn't return any environments for the given project '$this->projectName'."
+        );
+        //there's nothing for us to do, so we ...
+        return;
+      }
+
+      //grab this environment
+      $alias = $self->name();
+      $matchEnv = NULL;
+      foreach ($response->data->project->environments as $environment) {
+        $envAlias = "@lagoon.$this->projectName-$environment->name";
+        if ($envAlias == $alias) {
+          $matchEnv = $environment;
+        }
+      }
+
+      if (empty($matchEnv)) {
+        return;
+      }
+
+      $config = $this->getConfig();
+      if (!empty($matchEnv->openshift->sshHost)) {
+        $config->set('host', $matchEnv->openshift->sshHost);
+      }
+      if (!empty($matchEnv->openshift->sshPort)) {
+        $config->set(
+          'ssh.options',
+          sprintf("-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p %s", $matchEnv->openshift->sshPort)
+        );
+      }
+    }
+  }
+
+
+
+  /**
    * Generate a JWT token for the lagoon API.
    *
    * @command lagoon:jwt
@@ -213,7 +264,11 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
                     standbyAlias,
                     environments {
                     name,
-                    openshiftProjectName
+                    openshiftProjectName,
+                    openshift {
+                      sshHost,
+                      sshPort
+                      }
                     }
                 }
             }', $this->projectName);
