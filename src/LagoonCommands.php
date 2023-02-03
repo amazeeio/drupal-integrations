@@ -184,12 +184,19 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   public function getJwtToken() {
     [$ssh_host, $ssh_port] = explode(":", $this->endpoint);
 
-    $args = "-o ConnectTimeout=5 -o LogLevel=FATAL -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no";
+    $args = [
+      "-p",  $ssh_port,
+      "-o", "ConnectTimeout=5",
+      "-o", "LogLevel=FATAL",
+      "-o", "UserKnownHostsFile=/dev/null",
+      "-o", "StrictHostKeyChecking=no",
+    ];
+
     if ($this->sshKey) {
-      $args .= " -i $this->sshKey";
+      $args += ["-i",  $this->sshKey];
     }
-    $cmd = "ssh -p $ssh_port $args lagoon@$ssh_host token 2>&1";
-    $this->logger()->debug("Retrieving token via SSH - $cmd");
+    $cmd = ["ssh", ...$args, "lagoon@$ssh_host", "token", "2>&1"];
+    $this->logger()->debug("Retrieving token via SSH -" . implode(" ", $cmd));
 
     $ssh = new Process($cmd);
     $ssh->setTimeout($this->sshTimeout);
