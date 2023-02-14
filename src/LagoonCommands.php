@@ -9,6 +9,7 @@ use Drush\SiteAlias\SiteAliasManagerAwareInterface;
 use GuzzleHttp\Client;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
+use \Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Drush integration for Lagoon.
@@ -195,10 +196,18 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     if ($this->sshKey) {
       $args += ["-i",  $this->sshKey];
     }
-    $cmd = ["ssh", ...$args, "lagoon@$ssh_host", "token", "2>&1"];
-    $this->logger()->debug("Retrieving token via SSH -" . implode(" ", $cmd));
 
-    $ssh = new Process($cmd);
+    $cmd = ["ssh", ...$args, "lagoon@$ssh_host", "token", "2>&1"];
+
+    $this->logger()->debug("Retrieving token via SSH -" . implode(" ", $cmd));
+    if (version_compare(Kernel::VERSION, "4.2", "<")) {
+      // Symfony >= 4.2 only allows the array form of the command parameter
+      $ssh = new Process(implode(" ", $cmd));
+    }
+    else {
+      $ssh = new Process($cmd);
+    }
+
     $ssh->setTimeout($this->sshTimeout);
     $ssh->mustRun();
 
