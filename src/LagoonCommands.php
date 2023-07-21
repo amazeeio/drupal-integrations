@@ -70,7 +70,6 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     $this->jwt_token = getenv('LAGOON_OVERRIDE_JWT_TOKEN');
     $this->projectName = $lagoonyml['project'] ?? '';
     $this->ssh_port_timeout = $lagoonyml['ssh_port_timeout'] ?? 30;
-
     // Allow environment variable overrides.
     $this->api = getenv('LAGOON_OVERRIDE_API') ?: $this->api;
     $this->endpoint = getenv('LAGOON_OVERRIDE_SSH') ?: $this->endpoint;
@@ -115,6 +114,51 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       $this->io()->writeln($alias);
     }
   }
+
+  /**
+   * Get all remote aliases from lagoon API and generate a drush compatible site.aliases file
+   *
+   * @command lagoon:generate-aliases
+   *
+   * @aliases lg
+   */
+  public function generateAliases() {
+    // Project still not defined, throw a warning.
+    if ($this->projectName === FALSE) {
+      $this->logger()->warning('ERROR: Could not discover project name, you should define it inside your .lagoon.yml file');
+      return;
+    }
+
+    if (empty($this->jwt_token)) {
+      $this->jwt_token = $this->getJwtToken();
+    }
+
+    $response = $this->getLagoonEnvs();
+    // Check if the query returned any data for the requested project.
+    if (empty($response->data->project->environments)) {
+      $this->logger()->warning("API request didn't return any environments for the given project '$this->projectName'.");
+      return;
+    }
+
+    $aliases = [];
+
+    foreach ($response->data->project->environments as $env) {
+      $details = [
+        "host" => $env->openshift->sshHost,
+        "user" => $env->openshiftProjectName,
+        "paths" => ["files" => "/app/web/sites/default/files"],
+        "ssh" => [
+          "options" => sprintf('-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=FATAL -p %s', $env->openshift->sshPort),
+          "tty" => "false",
+        ],
+      ];
+
+      $alias[$env->name] = $details;
+    }
+
+    print(Yaml::dump($alias, 2));
+  }
+
 
   /**
    * Generate a JWT token for the lagoon API.
@@ -213,7 +257,11 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
                     standbyAlias,
                     environments {
                     name,
-                    openshiftProjectName
+                    openshiftProjectName,
+                    openshift {
+                      sshHost,
+                      sshPort
+                      }
                     }
                 }
             }', $this->projectName);
