@@ -117,17 +117,20 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   }
 
   /**
-   * Get all remote aliases from lagoon API and generate a drush compatible site aliases file
-   * * @param $file Optional argument to output the alias file to a particular file
+   * Get all remote aliases from lagoon API and generate a drush compatible
+   * site aliases file
+   * * @param $file Optional argument to output the alias file to a particular
+   * file
    *
    * @command lagoon:generate-aliases
    *
    * @aliases lg
    */
-  public function generateAliases($file = null) {
+  public function generateAliases($file = NULL) {
     // Project still not defined, throw a warning.
     if ($this->projectName === FALSE) {
-      $this->logger()->warning('ERROR: Could not discover project name, you should define it inside your .lagoon.yml file');
+      $this->logger()
+        ->warning('ERROR: Could not discover project name, you should define it inside your .lagoon.yml file');
       return;
     }
 
@@ -138,11 +141,10 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     $response = $this->getLagoonEnvs();
     // Check if the query returned any data for the requested project.
     if (empty($response->data->project->environments)) {
-      $this->logger()->warning("API request didn't return any environments for the given project '$this->projectName'.");
+      $this->logger()
+        ->warning("API request didn't return any environments for the given project '$this->projectName'.");
       return;
     }
-
-    $aliases = [];
 
     foreach ($response->data->project->environments as $env) {
       $details = [
@@ -162,14 +164,16 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
     try {
       $aliasContents = Yaml::dump($alias, 2);
-    } catch (\Exception $exception) {
+    }
+    catch (\Exception $exception) {
       $this->logger->warning("Unable to dump alias yaml: " . $exception->getMessage());
     }
 
     if (!is_null($file)) {
-      if(file_put_contents($file, $aliasContents) === FALSE) {
+      if (file_put_contents($file, $aliasContents) === FALSE) {
         $this->logger->warning("Unable to write aliases to " . $file);
-      } else {
+      }
+      else {
         $this->logger->warning("Successfully wrote aliases to " . $file);
       }
     }
@@ -177,7 +181,6 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       $this->io()->writeln($aliasContents);
     }
   }
-
 
   /**
    * Generate a JWT token for the lagoon API.
