@@ -7,6 +7,7 @@ use Drush\Commands\DrushCommands;
 use Drush\Drush;
 use Drush\SiteAlias\SiteAliasManagerAwareInterface;
 use GuzzleHttp\Client;
+use mysql_xdevapi\Exception;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
 
@@ -116,13 +117,14 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   }
 
   /**
-   * Get all remote aliases from lagoon API and generate a drush compatible site.aliases file
+   * Get all remote aliases from lagoon API and generate a drush compatible site aliases file
+   * * @param $file Optional argument to output the alias file to a particular file
    *
    * @command lagoon:generate-aliases
    *
    * @aliases lg
    */
-  public function generateAliases() {
+  public function generateAliases($file = null) {
     // Project still not defined, throw a warning.
     if ($this->projectName === FALSE) {
       $this->logger()->warning('ERROR: Could not discover project name, you should define it inside your .lagoon.yml file');
@@ -156,7 +158,24 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       $alias[$env->name] = $details;
     }
 
-    print(Yaml::dump($alias, 2));
+    $aliasContents = "";
+
+    try {
+      $aliasContents = Yaml::dump($alias, 2);
+    } catch (\Exception $exception) {
+      $this->logger->warning("Unable to dump alias yaml: " . $exception->getMessage());
+    }
+
+    if (!is_null($file)) {
+      if(file_put_contents($file, $aliasContents) === FALSE) {
+        $this->logger->warning("Unable to write aliases to " . $file);
+      } else {
+        $this->logger->warning("Successfully wrote aliases to " . $file);
+      }
+    }
+    else {
+      $this->io()->writeln($aliasContents);
+    }
   }
 
 
