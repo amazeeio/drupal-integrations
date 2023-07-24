@@ -119,8 +119,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   /**
    * Get all remote aliases from lagoon API and generate a drush compatible
    * site aliases file
-   * * @param $file Optional argument to output the alias file to a particular
-   * file
+   * * @param $file Optional output the alias file to a particular file.
    *
    * @command lagoon:generate-aliases
    *
@@ -148,11 +147,11 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
     foreach ($response->data->project->environments as $env) {
       $details = [
-        "host" => $env->openshift->sshHost,
-        "user" => $env->openshiftProjectName,
+        "host" => $env->kubernetes->sshHost,
+        "user" => $env->kubernetesProjectName,
         "paths" => ["files" => "/app/web/sites/default/files"],
         "ssh" => [
-          "options" => sprintf('-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=FATAL -p %s', $env->openshift->sshPort),
+          "options" => sprintf('-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=FATAL -p %s', $env->kubernetes->sshPort),
           "tty" => "false",
         ],
       ];
@@ -279,8 +278,8 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
                     standbyAlias,
                     environments {
                     name,
-                    openshiftProjectName,
-                    openshift {
+                    kubernetesNamespaceName,
+                    kubernetes {
                       sshHost,
                       sshPort
                       }
