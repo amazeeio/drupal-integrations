@@ -7,7 +7,6 @@ use Drush\Commands\DrushCommands;
 use Drush\Drush;
 use Drush\SiteAlias\SiteAliasManagerAwareInterface;
 use GuzzleHttp\Client;
-use mysql_xdevapi\Exception;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
 
@@ -117,10 +116,10 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   }
 
   /**
-   * Get all remote aliases from lagoon API and generate a drush compatible
-   * site aliases file.
+   * Get and print remote aliases from lagoon API site aliases file.
    *
-   * @param $file Optional output the alias file to a particular file.
+   * @param string $file
+   *   Optional, output the alias file to a particular file.
    *
    * @command lagoon:generate-aliases
    *
