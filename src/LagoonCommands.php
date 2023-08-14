@@ -105,7 +105,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     }
 
     foreach ($response->data->project->environments as $env) {
-      $alias = '@lagoon.' . $env->openshiftProjectName;
+      $alias = '@lagoon.' . $env->kubernetesNamespaceName;
 
       // Add production flag.
       if ($env->name === $response->data->project->productionEnvironment) {
