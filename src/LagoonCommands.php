@@ -9,6 +9,7 @@ use Drush\SiteAlias\SiteAliasManagerAwareInterface;
 use GuzzleHttp\Client;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
+use \Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Drush integration for Lagoon.
@@ -184,14 +185,29 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   public function getJwtToken() {
     [$ssh_host, $ssh_port] = explode(":", $this->endpoint);
 
-    $args = "-o ConnectTimeout=5 -o LogLevel=FATAL -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no";
-    if ($this->sshKey) {
-      $args .= " -i $this->sshKey";
-    }
-    $cmd = "ssh -p $ssh_port $args lagoon@$ssh_host token 2>&1";
-    $this->logger()->debug("Retrieving token via SSH - $cmd");
+    $args = [
+      "-p",  $ssh_port,
+      "-o", "ConnectTimeout=5",
+      "-o", "LogLevel=FATAL",
+      "-o", "UserKnownHostsFile=/dev/null",
+      "-o", "StrictHostKeyChecking=no",
+    ];
 
-    $ssh = new Process($cmd);
+    if ($this->sshKey) {
+      $args += ["-i",  $this->sshKey];
+    }
+
+    $cmd = ["ssh", ...$args, "lagoon@$ssh_host", "token", "2>&1"];
+
+    $this->logger()->debug("Retrieving token via SSH -" . implode(" ", $cmd));
+    if (version_compare(Kernel::VERSION, "4.2", "<")) {
+      // Symfony >= 4.2 only allows the array form of the command parameter
+      $ssh = new Process(implode(" ", $cmd));
+    }
+    else {
+      $ssh = new Process($cmd);
+    }
+
     $ssh->setTimeout($this->sshTimeout);
     $ssh->mustRun();
 
