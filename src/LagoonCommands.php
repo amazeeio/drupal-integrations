@@ -197,7 +197,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       $args += ["-i",  $this->sshKey];
     }
 
-    $cmd = ["ssh", ...$args, "lagoon@$ssh_host", "token", "2>&1"];
+    $cmd = ["ssh", ...$args, "lagoon@$ssh_host", "token"];
 
     $this->logger()->debug("Retrieving token via SSH -" . implode(" ", $cmd));
     if (version_compare(Kernel::VERSION, "4.2", "<")) {
@@ -209,7 +209,12 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     }
 
     $ssh->setTimeout($this->sshTimeout);
-    $ssh->mustRun();
+    
+    try {
+      $ssh->mustRun();  
+    } catch (ProcessFailedException $exception) {
+      $this->logger->debug($ssh->getMessage());
+    }
 
     $token = trim($ssh->getOutput());
     $this->logger->debug("JWT Token loaded via ssh: " . $token);
