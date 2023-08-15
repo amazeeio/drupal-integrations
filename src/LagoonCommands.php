@@ -18,6 +18,16 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   use SiteAliasManagerAwareTrait;
 
   /**
+   * Default ssh host, used for fallback
+   */
+  const DEFAULT_SSH_HOST = 'ssh.lagoon.amazeeio.cloud';
+
+  /**
+   * Default ssh port, used for fallback
+   */
+  const DEFAULT_SSH_PORT = 32222;
+
+  /**
    * Lagoon API endpoint.
    *
    * @var string
@@ -66,7 +76,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     // Get default config.
     $lagoonyml = $this->getLagoonYml();
     $this->api = $lagoonyml['api'] ?? 'https://api.lagoon.amazeeio.cloud/graphql';
-    $this->endpoint = $lagoonyml['ssh'] ?? 'ssh.lagoon.amazeeio.cloud:32222';
+    $this->endpoint = $lagoonyml['ssh'] ?? sprintf("%s:%s", self::DEFAULT_SSH_HOST, self::DEFAULT_SSH_PORT);
     $this->jwt_token = getenv('LAGOON_OVERRIDE_JWT_TOKEN');
     $this->projectName = $lagoonyml['project'] ?? '';
     $this->ssh_port_timeout = $lagoonyml['ssh_port_timeout'] ?? 30;
@@ -147,11 +157,11 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
     foreach ($response->data->project->environments as $env) {
       $details = [
-        "host" => $env->kubernetes->sshHost,
+        "host" => $env->kubernetes->sshHost ?: self::DEFAULT_SSH_HOST,
         "user" => $env->kubernetesNamespaceName,
         "paths" => ["files" => "/app/web/sites/default/files"],
         "ssh" => [
-          "options" => sprintf('-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=FATAL -p %s', $env->kubernetes->sshPort),
+          "options" => sprintf('-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=FATAL -p %s', $env->kubernetes->sshPort ?: self::DEFAULT_SSH_PORT),
           "tty" => "false",
         ],
       ];
