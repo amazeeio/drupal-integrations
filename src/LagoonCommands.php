@@ -163,7 +163,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
         "paths" => ["files" => "/app/web/sites/default/files"],
         "ssh" => [
           "options" => sprintf('-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=FATAL -p %s', $env->kubernetes->sshPort ?: self::DEFAULT_SSH_PORT),
-          "tty" => "false",
+          "tty" => false,
         ],
       ];
 
@@ -284,9 +284,9 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     }
 
     $ssh->setTimeout($this->sshTimeout);
-    
+
     try {
-      $ssh->mustRun();  
+      $ssh->mustRun();
     } catch (ProcessFailedException $exception) {
       $this->logger->debug($ssh->getMessage());
     }
