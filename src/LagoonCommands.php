@@ -71,6 +71,13 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   private $sshKey;
 
   /**
+   * Used so we only need to parse alias files once per request
+   *
+   * @var null
+   */
+  private $aliasFilesCache = null;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct() {
@@ -115,7 +122,10 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     }
 
     foreach ($response->data->project->environments as $env) {
-      $alias = '@lagoon.' . $env->kubernetesNamespaceName;
+
+      $aliasLocation = $this->getEnvrionmentHostAlias($env->name, $env->kubernetes->sshHost);
+
+      $alias = sprintf("@%s.%s", $aliasLocation, $env->kubernetesNamespaceName);
 
       // Add production flag.
       if ($env->name === $response->data->project->productionEnvironment) {
@@ -124,6 +134,121 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
       $this->io()->writeln($alias);
     }
+  }
+
+  /**
+   * This returns a list of all entries in the current set of referenced
+   * alias files including wildcards
+   *
+   * @return void
+   */
+  private function getEnvrionmentHostAlias($envName, $host)
+  {
+
+    if(is_null($this->aliasFilesCache)) {
+      $aliasFiles = $this->siteAliasManager()->listAllFilePaths();
+
+      $hostDetails = [];
+      foreach ($aliasFiles as $aliasFile) {
+        $aliasFileBase = basename($aliasFile, ".site.yml");
+        $hostDetails[$aliasFileBase] = Yaml::parseFile($aliasFile);
+      }
+      $this->aliasFilesCache = $hostDetails;
+    }
+
+    // now we traverse the structure to look for the matching item
+    $fallback = null;
+    // if we find the site name straight, we have no issues
+    foreach ($this->aliasFilesCache as $afLocation => $af) {
+      foreach($af as $aliasLocation => $item) {
+        if($aliasLocation == "*" and $item["host"] == $host) {
+          $fallback = $afLocation;
+        }
+        if(strtolower($aliasLocation) == strtolower($envName) && $item["host"] == $host) {
+          return $afLocation;
+        }
+      }
+    }
+    if($fallback == null) {
+      throw new \Exception(sprintf("Unable to find alias details for environment '%s' - you may need to generate alias files with `drush lg` or `drush lgwa`", $envName));
+    }
+    return $fallback;
+  }
+
+  /**
+   * Get and print remote aliases from lagoon API site aliases file.
+   *
+   * @param string $outputDirectory
+   *   Optional, output the alias file to a particular file.
+   *
+   * @command lagoon:generate-wildcard-aliases
+   *
+   * @aliases lgwa
+   */
+  public function generateWildcardAliases($outputDirectory = NULL) {
+    // Project still not defined, throw a warning.
+
+    if ($this->projectName === FALSE) {
+      $this->logger()
+        ->warning('ERROR: Could not discover project name, you should define it inside your .lagoon.yml file');
+      return;
+    }
+
+    if (empty($this->jwt_token)) {
+      $this->jwt_token = $this->getJwtToken();
+    }
+
+    $response = $this->getLagoonEnvs();
+    // Check if the query returned any data for the requested project.
+    if (empty($response->data->project->environments)) {
+      $this->logger()
+        ->warning("API request didn't return any environments for the given project '$this->projectName'.");
+      return;
+    }
+
+    $clusters = []; //cluster name as index
+
+    foreach ($response->data->project->environments as $env) {
+      if(empty($clusters[$env->kubernetes->name])) {
+
+        $details = [
+          "host" => $env->kubernetes->sshHost ?: self::DEFAULT_SSH_HOST,
+          "user" => '${env-name}',
+          "paths" => ["files" => "/app/web/sites/default/files"],
+          "ssh" => [
+            "options" => sprintf('-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=FATAL -p %s', $env->kubernetes->sshPort ?: self::DEFAULT_SSH_PORT),
+            "tty" => false,
+          ],
+        ];
+
+        $clusters[$env->kubernetes->name]['*'] = $details;
+      }
+    }
+
+    foreach ($clusters as $cluster) {
+      var_dump(Yaml::dump($cluster, 2));
+    }
+
+//    $aliasContents = "";
+//
+//    try {
+//      $aliasContents = Yaml::dump($alias, 2);
+//    }
+//    catch (\Exception $exception) {
+//      $this->logger->warning("Unable to dump alias yaml: " . $exception->getMessage());
+//    }
+//
+//    if (!is_null($file)) {
+//      if (file_put_contents($file, $aliasContents) === FALSE) {
+//        $this->logger->warning("Unable to write aliases to " . $file);
+//      }
+//      else {
+//        $this->logger->warning("Successfully wrote aliases to " . $file);
+//      }
+//    }
+//    else {
+//      $this->io()->writeln($aliasContents);
+//    }
   }
 
   /**
@@ -311,6 +436,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
                     name,
                     kubernetesNamespaceName,
                     kubernetes {
+                      name,
                       sshHost,
                       sshPort
                       }
