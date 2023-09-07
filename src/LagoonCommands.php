@@ -76,7 +76,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   public function __construct() {
     // Get default config.
     $lagoonyml = $this->getLagoonYml();
-    $this->api = $lagoonyml['api'] ?? 'https://api.lagoon.amazeeio.cloud/graphql';
+    $this->api = getenv('LAGOON_CONFIG_API_HOST') ?? $lagoonyml['api'] ?? 'https://api.lagoon.amazeeio.cloud/graphql';
     $this->endpoint = $lagoonyml['ssh'] ?? sprintf("%s:%s", self::DEFAULT_SSH_HOST, self::DEFAULT_SSH_PORT);
     $this->jwt_token = getenv('LAGOON_OVERRIDE_JWT_TOKEN');
     $this->projectName = $lagoonyml['project'] ?? '';
