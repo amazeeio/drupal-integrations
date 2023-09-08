@@ -19,6 +19,16 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   use SiteAliasManagerAwareTrait;
 
   /**
+   * Default ssh host, used for fallback
+   */
+  const DEFAULT_SSH_HOST = 'ssh.lagoon.amazeeio.cloud';
+
+  /**
+   * Default ssh port, used for fallback
+   */
+  const DEFAULT_SSH_PORT = 32222;
+
+  /**
    * Lagoon API endpoint.
    *
    * @var string
@@ -66,12 +76,11 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
   public function __construct() {
     // Get default config.
     $lagoonyml = $this->getLagoonYml();
-    $this->api = $lagoonyml['api'] ?? 'https://api.lagoon.amazeeio.cloud/graphql';
-    $this->endpoint = $lagoonyml['ssh'] ?? 'ssh.lagoon.amazeeio.cloud:32222';
+    $this->api = getenv('LAGOON_CONFIG_API_HOST') ?: $lagoonyml['api'] ?? 'https://api.lagoon.amazeeio.cloud/graphql';
+    $this->endpoint = $lagoonyml['ssh'] ?? sprintf("%s:%s", self::DEFAULT_SSH_HOST, self::DEFAULT_SSH_PORT);
     $this->jwt_token = getenv('LAGOON_OVERRIDE_JWT_TOKEN');
     $this->projectName = $lagoonyml['project'] ?? '';
     $this->ssh_port_timeout = $lagoonyml['ssh_port_timeout'] ?? 30;
-
     // Allow environment variable overrides.
     $this->api = getenv('LAGOON_OVERRIDE_API') ?: $this->api;
     $this->endpoint = getenv('LAGOON_OVERRIDE_SSH') ?: $this->endpoint;
@@ -106,7 +115,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     }
 
     foreach ($response->data->project->environments as $env) {
-      $alias = '@lagoon.' . $env->openshiftProjectName;
+      $alias = '@lagoon.' . $env->kubernetesNamespaceName;
 
       // Add production flag.
       if ($env->name === $response->data->project->productionEnvironment) {
@@ -114,6 +123,72 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       }
 
       $this->io()->writeln($alias);
+    }
+  }
+
+  /**
+   * Get and print remote aliases from lagoon API site aliases file.
+   *
+   * @param string $file
+   *   Optional, output the alias file to a particular file.
+   *
+   * @command lagoon:generate-aliases
+   *
+   * @aliases lg
+   */
+  public function generateAliases($file = NULL) {
+    // Project still not defined, throw a warning.
+    if ($this->projectName === FALSE) {
+      $this->logger()
+        ->warning('ERROR: Could not discover project name, you should define it inside your .lagoon.yml file');
+      return;
+    }
+
+    if (empty($this->jwt_token)) {
+      $this->jwt_token = $this->getJwtToken();
+    }
+
+    $response = $this->getLagoonEnvs();
+    // Check if the query returned any data for the requested project.
+    if (empty($response->data->project->environments)) {
+      $this->logger()
+        ->warning("API request didn't return any environments for the given project '$this->projectName'.");
+      return;
+    }
+
+    foreach ($response->data->project->environments as $env) {
+      $details = [
+        "host" => $env->kubernetes->sshHost ?: self::DEFAULT_SSH_HOST,
+        "user" => $env->kubernetesNamespaceName,
+        "paths" => ["files" => "/app/web/sites/default/files"],
+        "ssh" => [
+          "options" => sprintf('-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o LogLevel=FATAL -p %s', $env->kubernetes->sshPort ?: self::DEFAULT_SSH_PORT),
+          "tty" => false,
+        ],
+      ];
+
+      $alias[$env->kubernetesNamespaceName] = $details;
+    }
+
+    $aliasContents = "";
+
+    try {
+      $aliasContents = Yaml::dump($alias, 2);
+    }
+    catch (\Exception $exception) {
+      $this->logger->warning("Unable to dump alias yaml: " . $exception->getMessage());
+    }
+
+    if (!is_null($file)) {
+      if (file_put_contents($file, $aliasContents) === FALSE) {
+        $this->logger->warning("Unable to write aliases to " . $file);
+      }
+      else {
+        $this->logger->warning("Successfully wrote aliases to " . $file);
+      }
+    }
+    else {
+      $this->io()->writeln($aliasContents);
     }
   }
 
@@ -209,9 +284,9 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     }
 
     $ssh->setTimeout($this->sshTimeout);
-    
+
     try {
-      $ssh->mustRun();  
+      $ssh->mustRun();
     } catch (ProcessFailedException $exception) {
       $this->logger->debug($ssh->getMessage());
     }
@@ -234,7 +309,11 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
                     standbyAlias,
                     environments {
                     name,
-                    openshiftProjectName
+                    kubernetesNamespaceName,
+                    kubernetes {
+                      sshHost,
+                      sshPort
+                      }
                     }
                 }
             }', $this->projectName);
