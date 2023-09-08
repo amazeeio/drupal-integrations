@@ -167,7 +167,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
         ],
       ];
 
-      $alias[$env->name] = $details;
+      $alias[$env->kubernetesNamespaceName] = $details;
     }
 
     $aliasContents = "";
