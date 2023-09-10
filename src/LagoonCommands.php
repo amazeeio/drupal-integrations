@@ -142,7 +142,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    *
    * @return void
    */
-  private function getEnvrionmentHostAlias($envName, $host)
+  protected function getEnvrionmentHostAlias($envName, $host)
   {
 
     if(is_null($this->aliasFilesCache)) {
@@ -179,13 +179,17 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * Get and print remote aliases from lagoon API site aliases file.
    *
    * @param string $outputDirectory
-   *   Optional, output the alias file to a particular file.
+   *   Output the alias files to a particular directory.
    *
    * @command lagoon:generate-wildcard-aliases
    *
    * @aliases lgwa
    */
-  public function generateWildcardAliases($outputDirectory = NULL) {
+  public function generateWildcardAliases($outputDirectory) {
+    if (!is_dir($outputDirectory)) {
+      throw new \Exception(sprintf("Directory '%s' does not exist", $outputDirectory));
+    }
+
     // Project still not defined, throw a warning.
 
     if ($this->projectName === FALSE) {
@@ -220,13 +224,19 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
             "tty" => false,
           ],
         ];
-
-        $clusters[$env->kubernetes->name]['*'] = $details;
+        $safeClusterName = preg_replace("/[^a-zA-Z0-9]+/", "-", $env->kubernetes->name);
+        $clusters[$safeClusterName]['*'] = $details;
       }
     }
 
-    foreach ($clusters as $cluster) {
-      var_dump(Yaml::dump($cluster, 2));
+    foreach ($clusters as $clusterName => $clusterDetails) {
+//      var_dump(Yaml::dump($cluster, 2));
+      $outputFilename = sprintf("%s/%s", rtrim($outputDirectory, "/"), strtolower($clusterName) . ".site.yml");
+      if(file_exists($outputFilename)) {
+        throw new \Exception(sprintf("Cannot create file '%s' - file already exists", $outputFilename));
+      }
+      $aliasContents = Yaml::dump($clusterDetails);
+      file_put_contents($outputFilename, $aliasContents);
     }
 
 //    $aliasContents = "";
