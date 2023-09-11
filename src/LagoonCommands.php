@@ -230,7 +230,6 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     }
 
     foreach ($clusters as $clusterName => $clusterDetails) {
-//      var_dump(Yaml::dump($cluster, 2));
       $outputFilename = sprintf("%s/%s", rtrim($outputDirectory, "/"), strtolower($clusterName) . ".site.yml");
       if(file_exists($outputFilename)) {
         throw new \Exception(sprintf("Cannot create file '%s' - file already exists", $outputFilename));
@@ -238,27 +237,6 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       $aliasContents = Yaml::dump($clusterDetails);
       file_put_contents($outputFilename, $aliasContents);
     }
-
-//    $aliasContents = "";
-//
-//    try {
-//      $aliasContents = Yaml::dump($alias, 2);
-//    }
-//    catch (\Exception $exception) {
-//      $this->logger->warning("Unable to dump alias yaml: " . $exception->getMessage());
-//    }
-//
-//    if (!is_null($file)) {
-//      if (file_put_contents($file, $aliasContents) === FALSE) {
-//        $this->logger->warning("Unable to write aliases to " . $file);
-//      }
-//      else {
-//        $this->logger->warning("Successfully wrote aliases to " . $file);
-//      }
-//    }
-//    else {
-//      $this->io()->writeln($aliasContents);
-//    }
   }
 
   /**
@@ -302,7 +280,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
         ],
       ];
 
-      $alias[$env->kubernetesNamespaceName] = $details;
+      $alias[$env->name] = $details;
     }
 
     $aliasContents = "";
