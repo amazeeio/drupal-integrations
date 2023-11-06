@@ -41,7 +41,7 @@ if (getenv('LAGOON')) {
         'username' => getenv('POSTGRES_USERNAME') ?: 'drupal',
         'password' => getenv('POSTGRES_PASSWORD') ?: 'drupal',
         'host' => getenv('POSTGRES_HOST') ?: 'postgresql',
-        'port' => $dbtype == 'pgsql' ? 5432 : (getenv('MARIADB_PORT') ?: 3306),
+        'port' => getenv('POSTGRES_PORT') ?: 5432,
         'prefix' => '',
       ];
       break;
