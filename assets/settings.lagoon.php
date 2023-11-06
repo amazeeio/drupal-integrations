@@ -37,8 +37,8 @@ if (getenv('LAGOON')) {
     'database' => getenv('POSTGRES_DATABASE') ?: getenv('MARIADB_DATABASE') ?: 'drupal',
     'username' => getenv('POSTGRES_USERNAME') ?: getenv('MARIADB_USERNAME') ?: 'drupal',
     'password' => getenv('POSTGRES_PASSWORD') ?: getenv('MARIADB_PASSWORD') ?: 'drupal',
-    'host' => getenv('POSTGRES_HOST') ?: getenv('MARIADB_HOST') ?: 'mariadb',
-    'port' => $dbtype == 'pgsql' ? 5432 : getenv('MARIADB_PORT') ?: 3306,
+    'host' => getenv('POSTGRES_HOST') ?: (getenv('MARIADB_HOST') ?: 'mariadb'),
+    'port' => $dbtype == 'pgsql' ? 5432 : (getenv('MARIADB_PORT') ?: 3306),
     'prefix' => '',
   ];
 }
