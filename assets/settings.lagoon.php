@@ -31,13 +31,14 @@ if (!defined("LAGOON_VERSION")) {
 
 // Lagoon database connection.
 if (getenv('LAGOON')) {
+  $dbtype = !empty(getenv('POSTGRES_HOST')) ? 'pgsql' : 'mysql';
   $databases['default']['default'] = [
-    'driver' => 'mysql',
-    'database' => getenv('MARIADB_DATABASE') ?: 'drupal',
-    'username' => getenv('MARIADB_USERNAME') ?: 'drupal',
-    'password' => getenv('MARIADB_PASSWORD') ?: 'drupal',
-    'host' => getenv('MARIADB_HOST') ?: 'mariadb',
-    'port' => getenv('MARIADB_PORT') ?: 3306,
+    'driver' => $dbtype,
+    'database' => getenv('POSTGRES_DATABASE') ?: getenv('MARIADB_DATABASE') ?: 'drupal',
+    'username' => getenv('POSTGRES_USERNAME') ?: getenv('MARIADB_USERNAME') ?: 'drupal',
+    'password' => getenv('POSTGRES_PASSWORD') ?: getenv('MARIADB_PASSWORD') ?: 'drupal',
+    'host' => getenv('POSTGRES_HOST') ?: getenv('MARIADB_HOST') ?: 'mariadb',
+    'port' => $dbtype == 'pgsql' ? 5432 : getenv('MARIADB_PORT') ?: 3306,
     'prefix' => '',
   ];
 }
