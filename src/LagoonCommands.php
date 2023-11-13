@@ -7,9 +7,9 @@ use Drush\Commands\DrushCommands;
 use Drush\Drush;
 use Drush\SiteAlias\SiteAliasManagerAwareInterface;
 use GuzzleHttp\Client;
+use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Yaml\Yaml;
-use \Symfony\Component\HttpKernel\Kernel;
 
 /**
  * Drush integration for Lagoon.
@@ -72,7 +72,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       $this->jwt_token = getenv('LAGOON_OVERRIDE_JWT_TOKEN');
       $this->projectName = $lagoonyml['project'] ?? '';
       $this->ssh_port_timeout = $lagoonyml['ssh_port_timeout'] ?? 30;
-  
+
       // Allow environment variable overrides.
       $this->api = getenv('LAGOON_OVERRIDE_API') ?: $this->api;
       $this->endpoint = getenv('LAGOON_OVERRIDE_SSH') ?: $this->endpoint;
@@ -188,7 +188,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     [$ssh_host, $ssh_port] = explode(":", $this->endpoint);
 
     $args = [
-      "-p",  $ssh_port,
+      "-p", $ssh_port,
       "-o", "ConnectTimeout=5",
       "-o", "LogLevel=FATAL",
       "-o", "UserKnownHostsFile=/dev/null",
@@ -196,14 +196,14 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     ];
 
     if ($this->sshKey) {
-      $args += ["-i",  $this->sshKey];
+      $args += ["-i", $this->sshKey];
     }
 
     $cmd = ["ssh", ...$args, "lagoon@$ssh_host", "token"];
 
     $this->logger()->debug("Retrieving token via SSH -" . implode(" ", $cmd));
     if (version_compare(Kernel::VERSION, "4.2", "<")) {
-      // Symfony >= 4.2 only allows the array form of the command parameter
+      // Symfony >= 4.2 only allows the array form of the command parameter.
       $ssh = new Process(implode(" ", $cmd));
     }
     else {
@@ -211,10 +211,11 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
     }
 
     $ssh->setTimeout($this->sshTimeout);
-    
+
     try {
-      $ssh->mustRun();  
-    } catch (ProcessFailedException $exception) {
+      $ssh->mustRun();
+    }
+    catch (ProcessFailedException $exception) {
       $this->logger->debug($ssh->getMessage());
     }
 
