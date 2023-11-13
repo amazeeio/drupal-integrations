@@ -31,15 +31,48 @@ if (!defined("LAGOON_VERSION")) {
 
 // Lagoon database connection.
 if (getenv('LAGOON')) {
-  $databases['default']['default'] = [
-    'driver' => 'mysql',
-    'database' => getenv('MARIADB_DATABASE') ?: 'drupal',
-    'username' => getenv('MARIADB_USERNAME') ?: 'drupal',
-    'password' => getenv('MARIADB_PASSWORD') ?: 'drupal',
-    'host' => getenv('MARIADB_HOST') ?: 'mariadb',
-    'port' => getenv('MARIADB_PORT') ?: 3306,
-    'prefix' => '',
-  ];
+  $dbtype = getenv("DB_TYPE") ?: (!empty(getenv('POSTGRES_HOST')) ? 'pgsql' : 'mysql');
+
+  switch ($dbtype) {
+    case ('pgsql'):
+      $databases['default']['default'] = [
+        'driver' => 'pgsql',
+        'database' => getenv('POSTGRES_DATABASE') ?: 'drupal',
+        'username' => getenv('POSTGRES_USERNAME') ?: 'drupal',
+        'password' => getenv('POSTGRES_PASSWORD') ?: 'drupal',
+        'host' => getenv('POSTGRES_HOST') ?: 'postgresql',
+        'port' => getenv('POSTGRES_PORT') ?: 5432,
+        'prefix' => '',
+      ];
+      break;
+
+    case ('mysql'):
+      $databases['default']['default'] = [
+        'driver' => $dbtype,
+        'database' => getenv('MYSQL_DATABASE') ?: (getenv('MARIADB_DATABASE') ?: 'lagoon'),
+        'username' => getenv('MYSQL_USERNAME') ?: (getenv('MARIADB_USERNAME') ?: 'lagoon'),
+        'password' => getenv('MYSQL_PASSWORD') ?: (getenv('MARIADB_PASSWORD') ?: 'lagoon'),
+        'host' => getenv('MYSQL_HOST') ?: (getenv('MARIADB_HOST' ?: 'mysql')),
+        'port' => getenv('MYSQL_PORT') ?: (getenv('MARIADB_PORT') ?: 3306),
+        'prefix' => '',
+      ];
+      break;
+
+    case ('mariadb'):
+      // Fall through to default mariadb settings.
+    default:
+      // We default to the mariadb settings.
+      $databases['default']['default'] = [
+        'driver' => $dbtype,
+        'database' => getenv('MARIADB_DATABASE') ?: 'drupal',
+        'username' => getenv('MARIADB_USERNAME') ?: 'drupal',
+        'password' => getenv('MARIADB_PASSWORD') ?: 'drupal',
+        'host' => (getenv('MARIADB_HOST') ?: 'mariadb'),
+        'port' => getenv('MARIADB_PORT') ?: 3306,
+        'prefix' => '',
+      ];
+      break;
+  }
 }
 
 // Lagoon reverse proxy settings.
