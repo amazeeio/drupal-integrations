@@ -56,7 +56,7 @@ if (getenv('LAGOON')) {
 
 // Temp directory.
 if (getenv('TMP')) {
-  $config['system.file']['path']['temporary'] = getenv('TMP');
+  $settings['file_temp_path'] = getenv('TMP');
 }
 
 // Hash salt.
