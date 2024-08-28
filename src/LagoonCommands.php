@@ -274,6 +274,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * Will check whether the current environment is Lagoon or Lagoon dev envs.
    *
    * @return bool
+   *   is a functional Lagoon env
    */
   private function isLagoonEnvironment() {
     return !empty(getenv("LAGOON"));
@@ -281,9 +282,8 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
   /**
    * This should be run before any Lagoon commands.
-   * Checks whether we have a valid environment before running.
    *
-   * @return void
+   * Checks whether we have a valid environment before running.
    */
   private function preCommandChecks() {
     if ($this->isLagoonEnvironment() == FALSE) {
