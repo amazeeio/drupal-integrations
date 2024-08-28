@@ -4,8 +4,8 @@ namespace Drush\Commands\drupal_integrations;
 
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Drush\Commands\DrushCommands;
-use Drush\Exceptions\CommandFailedException;
 use Drush\Drush;
+use Drush\Exceptions\CommandFailedException;
 use Drush\SiteAlias\SiteAliasManagerAwareInterface;
 use GuzzleHttp\Client;
 use Symfony\Component\HttpKernel\Kernel;
@@ -65,8 +65,8 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * {@inheritdoc}
    */
   public function __construct() {
-    // Get default config
-    if($this->isLagoonEnvironment()) {
+    // Get default config.
+    if ($this->isLagoonEnvironment()) {
       $this->isLagoonEnvironment = TRUE;
       $lagoonyml = $this->getLagoonYml();
       $this->api = $lagoonyml['api'] ?? 'https://api.lagoon.amazeeio.cloud/graphql';
@@ -286,7 +286,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * @return void
    */
   private function preCommandChecks() {
-    if($this->isLagoonEnvironment() == FALSE) {
+    if ($this->isLagoonEnvironment() == FALSE) {
       throw new CommandFailedException(dt("Attempting to run a Lagoon command in a non-Lagoon environment."));
     }
   }
