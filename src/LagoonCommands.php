@@ -4,6 +4,7 @@ namespace Drush\Commands\drupal_integrations;
 
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Drush\Commands\DrushCommands;
+use Drush\Exceptions\CommandFailedException;
 use Drush\Drush;
 use Drush\Exceptions\CommandFailedException;
 use Drush\SiteAlias\SiteAliasManagerAwareInterface;
