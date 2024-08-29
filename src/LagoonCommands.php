@@ -3,6 +3,7 @@
 namespace Drush\Commands\drupal_integrations;
 
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
+use Drush\Attributes as CLI;
 use Drush\Commands\DrushCommands;
 use Drush\Drush;
 use Drush\Exceptions\CommandFailedException;
@@ -86,11 +87,8 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
   /**
    * Get all remote aliases from lagoon API.
-   *
-   * @command lagoon:aliases
-   *
-   * @aliases la
    */
+  #[CLI\Command(name: 'lagoon:aliases', aliases: ['la'])]
   public function aliases() {
     $this->preCommandChecks();
     // Project still not defined, throw a warning.
@@ -124,11 +122,8 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
   /**
    * Generate a JWT token for the lagoon API.
-   *
-   * @command lagoon:jwt
-   *
-   * @aliases jwt
    */
+  #[CLI\Command(name: 'lagoon:jwt', aliases: ['jwt'])]
   public function generateJwt() {
     $this->preCommandChecks();
     $this->io()->writeln($this->getJwtToken());
@@ -136,9 +131,8 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
   /**
    * Run pre-rollout tasks.
-   *
-   * @command lagoon:pre-rollout-tasks
    */
+  #[CLI\Command(name: 'lagoon:pre-rollout-tasks')]
   public function preRolloutTasks() {
     $this->preCommandChecks();
     $this->runRolloutTasks('pre');
@@ -146,9 +140,8 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
   /**
    * Run post-rollout tasks.
-   *
-   * @command lagoon:post-rollout-tasks
    */
+  #[CLI\Command(name: 'lagoon:post-rollout-tasks')]
   public function postRolloutTasks() {
     $this->preCommandChecks();
     $this->runRolloutTasks('post');
