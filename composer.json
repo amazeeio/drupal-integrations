@@ -32,7 +32,8 @@
         "drupal/lagoon_logs": "Zero configuration logging system for Drupal sites running on Lagoon"
     },
     "require": {
-        "drupal/core-composer-scaffold": "*"
+        "drupal/core-composer-scaffold": "*",
+        "drush/drush": ">=11.6.0"
     },
     "config": {
         "allow-plugins": {
