@@ -5,6 +5,7 @@ namespace Drush\Commands\drupal_integrations;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Drush\Commands\DrushCommands;
 use Drush\Drush;
+use Drush\Exceptions\CommandFailedException;
 use Drush\SiteAlias\SiteAliasManagerAwareInterface;
 use GuzzleHttp\Client;
 use Symfony\Component\HttpKernel\Kernel;
@@ -64,8 +65,9 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * {@inheritdoc}
    */
   public function __construct() {
-    if (getenv('LAGOON')) {
-      // Get default config.
+    // Get default config.
+    if ($this->isLagoonEnvironment()) {
+      $this->isLagoonEnvironment = TRUE;
       $lagoonyml = $this->getLagoonYml();
       $this->api = $lagoonyml['api'] ?? 'https://api.lagoon.amazeeio.cloud/graphql';
       $this->endpoint = $lagoonyml['ssh'] ?? 'ssh.lagoon.amazeeio.cloud:32222';
@@ -90,6 +92,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * @aliases la
    */
   public function aliases() {
+    $this->preCommandChecks();
     // Project still not defined, throw a warning.
     if ($this->projectName === FALSE) {
       $this->logger()->warning('ERROR: Could not discover project name, you should define it inside your .lagoon.yml file');
@@ -127,6 +130,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * @aliases jwt
    */
   public function generateJwt() {
+    $this->preCommandChecks();
     $this->io()->writeln($this->getJwtToken());
   }
 
@@ -136,6 +140,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * @command lagoon:pre-rollout-tasks
    */
   public function preRolloutTasks() {
+    $this->preCommandChecks();
     $this->runRolloutTasks('pre');
   }
 
@@ -145,6 +150,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * @command lagoon:post-rollout-tasks
    */
   public function postRolloutTasks() {
+    $this->preCommandChecks();
     $this->runRolloutTasks('post');
   }
 
@@ -262,6 +268,27 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
 
     $this->logger->debug("Response from api: " . var_export(json_decode($response), TRUE));
     return json_decode($response);
+  }
+
+  /**
+   * Will check whether the current environment is Lagoon or Lagoon dev envs.
+   *
+   * @return bool
+   *   is a functional Lagoon env
+   */
+  private function isLagoonEnvironment() {
+    return !empty(getenv("LAGOON"));
+  }
+
+  /**
+   * This should be run before any Lagoon commands.
+   *
+   * Checks whether we have a valid environment before running.
+   */
+  private function preCommandChecks() {
+    if ($this->isLagoonEnvironment() == FALSE) {
+      throw new CommandFailedException(dt("Attempting to run a Lagoon command in a non-Lagoon environment."));
+    }
   }
 
 }
