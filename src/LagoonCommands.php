@@ -23,35 +23,35 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    *
    * @var string
    */
-  private $api;
+  private $api = 'https://api.lagoon.amazeeio.cloud/graphql';
 
   /**
    * Lagoon SSH endpoint.
    *
    * @var string
    */
-  private $endpoint;
+  private $endpoint = 'ssh.lagoon.amazeeio.cloud:32222';
 
   /**
    * JWT token.
    *
    * @var string
    */
-  private $jwttoken;
+  private $jwtToken;
 
   /**
    * Lagoon project name.
    *
    * @var string
    */
-  private $projectName;
+  private $projectName = '';
 
   /**
    * Connection timeout.
    *
    * @var int
    */
-  private $sshTimeout;
+  private $sshTimeout = 30;
 
   /**
    * Path to a specific SSH key to use for lagoon authentication.
@@ -64,22 +64,20 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * {@inheritdoc}
    */
   public function __construct() {
-    if (getenv('LAGOON')) {
-      // Get default config.
-      $lagoonyml = $this->getLagoonYml();
-      $this->api = $lagoonyml['api'] ?? 'https://api.lagoon.amazeeio.cloud/graphql';
-      $this->endpoint = $lagoonyml['ssh'] ?? 'ssh.lagoon.amazeeio.cloud:32222';
-      $this->jwt_token = getenv('LAGOON_OVERRIDE_JWT_TOKEN');
-      $this->projectName = $lagoonyml['project'] ?? '';
-      $this->ssh_port_timeout = $lagoonyml['ssh_port_timeout'] ?? 30;
+    // Allow `.lagoon.yml` overrides.
+    $lagoonyml = $this->getLagoonYml();
+    $this->api = $lagoonyml['api'] ?? $this->api;
+    $this->endpoint = $lagoonyml['ssh'] ?? $this->endpoint;
+    $this->projectName = $lagoonyml['project'] ?? $this->projectName;
+    $this->sshTimeout = $lagoonyml['ssh_port_timeout'] ?? $this->sshTimeout;
 
-      // Allow environment variable overrides.
-      $this->api = getenv('LAGOON_OVERRIDE_API') ?: $this->api;
-      $this->endpoint = getenv('LAGOON_OVERRIDE_SSH') ?: $this->endpoint;
-      $this->projectName = getenv('LAGOON_PROJECT') ?: $this->projectName;
-      $this->sshTimeout = getenv('LAGOON_OVERRIDE_SSH_TIMEOUT') ?: $this->sshTimeout;
-      $this->sshKey = getenv('LAGOON_SSH_KEY');
-    }
+    // Allow environment variable overrides.
+    $this->api = getenv('LAGOON_OVERRIDE_API') ?: $this->api;
+    $this->endpoint = getenv('LAGOON_OVERRIDE_SSH') ?: $this->endpoint;
+    $this->projectName = getenv('LAGOON_PROJECT') ?: $this->projectName;
+    $this->sshTimeout = getenv('LAGOON_OVERRIDE_SSH_TIMEOUT') ?: $this->sshTimeout;
+    $this->sshKey = getenv('LAGOON_SSH_KEY');
+    $this->jwtToken = getenv('LAGOON_OVERRIDE_JWT_TOKEN');
   }
 
   /**
@@ -96,8 +94,8 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       return;
     }
 
-    if (empty($this->jwt_token)) {
-      $this->jwt_token = $this->getJwtToken();
+    if (empty($this->jwtToken)) {
+      $this->jwtToken = $this->getJwtToken();
     }
 
     $response = $this->getLagoonEnvs();
@@ -176,9 +174,19 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
    * Retrieves the contents of the sites .lagoon.yml file.
    */
   public function getLagoonYml() {
-    $project_root = Drush::bootstrapManager()->getComposerRoot();
-    $lagoonyml_path = $project_root . "/.lagoon.yml";
-    return (file_exists($lagoonyml_path)) ? Yaml::parse(file_get_contents($lagoonyml_path)) : [];
+    try {
+      $project_root = Drush::bootstrapManager()->getComposerRoot();
+      $lagoonyml_path = $project_root . "/.lagoon.yml";
+      return (file_exists($lagoonyml_path)) ? Yaml::parse(file_get_contents($lagoonyml_path)) : [];
+    }
+    catch (\Throwable $e) {
+      if (empty(getenv("LAGOON"))) {
+        // We might not be in a Lagoon environment, fail silently.
+        return [];
+      }
+
+      throw $e;
+    }
   }
 
   /**
@@ -248,7 +256,7 @@ class LagoonCommands extends DrushCommands implements SiteAliasManagerAwareInter
       'base_uri' => $this->api,
       'headers' => [
         'Content-Type' => 'application/json',
-        'Authorization' => 'Bearer ' . $this->jwt_token,
+        'Authorization' => 'Bearer ' . $this->jwtToken,
       ],
       'body' => json_encode(['query' => $query]),
     ]);
